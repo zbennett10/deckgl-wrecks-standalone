@@ -1,0 +1,93 @@
+<html>
+  <head>
+    <script src="deckgl.min.js"></script>
+    <!-- only if base map is needed -->
+    <!-- <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.js"></script>
+    <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.css" rel="stylesheet" /> -->
+  </head>
+  <body>
+    <div id="container" style="width: 100vw; height: 100vh;"></div>
+  </body>
+  <script type="text/javascript">
+
+
+    // Point to hosted GeoJSON for NOAA's AWOIC Wrecks
+    const wrecksGeoJson = 'https://raw.githubusercontent.com/zbennett10/hosted-geojson/master/awoic_wrecks.geojson';
+
+    // Example logging settings for debugging purposes
+    // deck.log.enable();
+    // deck.log.priority = 2;
+
+    const LIGHT_SETTINGS = {
+        lightsPosition: [-125, 50.5, 5000, -122.8, 48.5, 8000],
+        ambientRatio: 0.2,
+        diffuseRatio: 0.5,
+        specularRatio: 0.3,
+        lightsStrength: [1.0, 0.0, 2.0, 0.0],
+        numberOfLights: 2
+    };
+
+    const COLOR_RANGE = [
+        [1, 152, 189],
+        [73, 227, 206],
+        [216, 254, 181],
+        [254, 237, 177],
+        [254, 173, 84],
+        [209, 55, 78]
+    ];
+
+
+    fetch(wrecksGeoJson)
+        .then(response => response.json())
+        .then(data => {
+            // Grab just the coordinates to feed into the HexagonLayer
+            const hexData = data.features.map(f => f.geometry.coordinates);
+            const hexagonLayer = new HexagonLayer({
+                    id: 'heatmap',
+                    colorRange: COLOR_RANGE,
+                    data: hexData,
+                    elevationRange: [0, 1500],
+                    elevationScale: 275,
+                    extruded: true,
+                    getPosition: d => d,
+                    lightSettings: LIGHT_SETTINGS,
+                    opacity: 1
+                });
+                
+                // Instantiate Map
+                const deckgl = new deck.DeckGL({
+                    container: 'container',
+                    latitude: 40.254,
+                    longitude: -75.13,
+                    zoom: 5,
+                    minZoom: 1,
+                    maxZoom: 15,
+                    pitch: 45,
+                    layers: [hexagonLayer]
+                });
+       
+        /*Example geojson point layer
+            new deck.GeoJsonLayer({
+            id: 'awoic_wrecks',
+            data,
+            opacity: 1.0,
+            pickable: true,
+            stroked: false,
+            filled: true,
+            extruded: true,
+            wireframe: true,
+            fp64: true,
+            getRadius: f => 10000,
+            getElevation: f => {
+                return Math.sqrt(Number(f.properties.DEPTH)) * 10000;
+            },
+            getFillColor: [238, 112, 98, 255],
+            getLineColor: f => [255, 255, 255],
+            onHover: updateTooltip
+          });
+          */
+
+
+    });
+  </script>
+</html>
